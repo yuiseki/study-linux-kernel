@@ -243,7 +243,7 @@ static int run_strace(const char *dir, const char *minishell_path, const char *l
 				goto next_entry2;
 
 		long p = strtol(s, NULL, 10);
-		if (p <= 0 || p == root_pid)
+		if (p <= 0)
 			goto next_entry2;
 
 		snprintf(path, sizeof(path), "%s/%s", dir, name);
@@ -253,8 +253,32 @@ static int run_strace(const char *dir, const char *minishell_path, const char *l
 
 		while (fgets(linebuf, sizeof(linebuf), in))
 		{
-			// 例: "13:17:00.762722 execve(...)" なので pid を前につけて揃える
-			fprintf(out, "%ld %s", p, linebuf);
+            // root(pid最小)は “配線の骨格” だけ残す（env/minishell の execve ノイズを落とす）
+            if (p == root_pid)
+            {
+                if (!(strstr(linebuf, " pipe2(") ||
+                    strstr(linebuf, " pipe(")  ||
+                    strstr(linebuf, " clone(") ||
+                    strstr(linebuf, " fork(")  ||
+                    strstr(linebuf, " vfork(") ||
+                    strstr(linebuf, " wait4(") ||
+                    strstr(linebuf, " waitid(")))
+                {
+                    continue;
+                }
+            }
+
+			// 例: "13:17:00.762722 execve(...)" なので時刻の次に pid を挿入
+            char *p_time = strchr(linebuf, ' ');
+            if (p_time)
+            {
+                p_time++;
+                fprintf(out, "%.*s%ld %s", (int)(p_time - linebuf), linebuf, p, p_time);
+            }
+            else
+            {
+                fprintf(out, "%ld %s", p, linebuf);
+            }
 			if (linebuf[strlen(linebuf) - 1] != '\n')
 				fputc('\n', out);
 		}
@@ -263,6 +287,19 @@ static int run_strace(const char *dir, const char *minishell_path, const char *l
 	next_entry2:
 		;
 	}
+
+    // out を sort しておく（時刻順）
+    while (fflush(out), fsync(fileno(out)), 0)
+    {
+        fclose(out);
+        char sort_cmd[PATH_MAX + 128];
+        snprintf(sort_cmd, sizeof(sort_cmd), "sort -k2 %s -o %s", trace_tmp, trace_tmp);
+        int rc = system(sort_cmd);
+        out = fopen(trace_tmp, "a");
+        if (rc != 0 || !out)
+            break;
+        break;
+    }
 
 	fclose(out);
 	closedir(dp);
