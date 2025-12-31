@@ -7,3 +7,5 @@ logs/
 !artifacts/.gitkeep
 minishell/src/*.o
 minishell/minishell
+minihttpd/src/*.o
+minihttpd/minihttpd
