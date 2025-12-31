@@ -26,6 +26,17 @@ curl -v http://localhost:8080/
 ブラウザでも `http://localhost:8080/` を開くと表示されます。
 終了するときは `Ctrl+C` で止めてください。
 
+## トレース実行
+
+`strace` を内包して syscall ログを出したい場合は `--trace` を使います。
+
+```sh
+./minihttpd --trace
+```
+
+ログは `./logs/minihttpd/<timestamp>-<pid>/trace.txt` に保存されます
+（作成できない場合は `./tmp/minihttpd/` に作成します）。
+
 ## 観測のヒント
 
 `strace` で syscall を観測できます。
