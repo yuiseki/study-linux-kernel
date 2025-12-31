@@ -19,6 +19,7 @@
         "IFREG",
         "libc",
         "makedev",
+        "minihttpd",
         "minishell",
         "mmap",
         "mprotect",
