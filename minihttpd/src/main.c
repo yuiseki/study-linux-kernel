@@ -93,17 +93,19 @@ static int serve_once(int listen_fd)
 int main(void)
 {
 	int listen_fd;
+	int ret;
 
 	listen_fd = setup_listen_socket();
 	if (listen_fd < 0)
 		return 1;
 
 	fprintf(stderr, "minihttpd: listening on http://localhost:%d\n", LISTEN_PORT);
-	if (serve_once(listen_fd) < 0)
+	while (1)
 	{
-		close(listen_fd);
-		return 1;
+		ret = serve_once(listen_fd);
+		if (ret < 0)
+			break;
 	}
 	close(listen_fd);
-	return 0;
+	return (ret < 0);
 }
