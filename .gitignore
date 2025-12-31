@@ -1,0 +1,9 @@
+forks/
+!forks/.gitkeep
+linux/
+bash/
+artifacts/
+logs/
+!artifacts/.gitkeep
+minishell/src/*.o
+minishell/minishell
