@@ -173,3 +173,50 @@ A. 抽出パターンは「意図的に広め」です。
 * minishell の `pipe2 / dup2 / openat / execve` の形を固定して観測する
 * bash の挙動と比較する
 * その syscall を起点に Linux カーネルの該当箇所へ降りる
+
+---
+
+## bpftrace (Docker)
+
+`bpftrace` は root 権限と kernel の情報が必要なため、Docker 経由で実行するのが安定です。
+このリポジトリでは `bpftrace_run.sh` と `bpftrace_docker_run.sh` を用意しています。
+
+### 依存関係
+
+- Docker
+
+### 実行（Docker 経由）
+
+```bash
+# 例: echo の openat/read/write を観測
+./scripts/observe/bpftrace_docker_run.sh -- /bin/echo hi
+```
+
+出力は `artifacts/bpftrace/<name>-<timestamp>/` に保存されます。
+
+- `trace.txt`: bpftrace の観測結果
+- `stdout.txt` / `stderr.txt`: 実行コマンドの標準出力/標準エラー
+- `trace.bt`: 実際に使用した bpftrace プログラム
+
+### minishell / minihttpd の例
+
+```bash
+# minishell のパイプ/リダイレクト
+./scripts/observe/bpftrace_docker_run.sh -- env -i PATH=/usr/bin:/bin ./minishell/minishell "echo hi | wc -c > /tmp/out"
+
+# minihttpd の 1 リクエスト
+./scripts/observe/bpftrace_docker_run.sh -- ./scripts/observe/samples/run_minihttpd_hello.sh
+```
+
+### ノイズ除去 (focus)
+
+`trace.txt` から loader/lib 由来のノイズを落としたいときは `bpftrace_focus.sh` を使います。
+
+```bash
+outdir="artifacts/bpftrace/<name>-<timestamp>"
+./scripts/observe/bpftrace_focus.sh "$outdir"
+cat "$outdir/focus.txt"
+```
+
+必要なら `--keep-noise` で除外を無効化できます。
+
