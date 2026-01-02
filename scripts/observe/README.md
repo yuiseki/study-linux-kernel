@@ -220,3 +220,9 @@ cat "$outdir/focus.txt"
 
 必要なら `--keep-noise` で除外を無効化できます。
 
+---
+
+## OpenTelemetry (OBI) についてのメモ
+
+このリポジトリは C 実装（minishell/minihttpd）のため、OBI で HTTP トレースは出ませんでした。
+プロセス検出はできましたが、トレース出力が得られないため、OpenTelemetry 系は対象外とします。
